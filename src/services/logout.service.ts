@@ -4,7 +4,7 @@ import { CipherService } from '../abstractions/cipher.service';
 import { CollectionService } from '../abstractions/collection.service';
 import { CryptoService } from '../abstractions/crypto.service';
 import { FolderService } from '../abstractions/folder.service';
-import { LockService as LockServiceAbstraction } from '../abstractions/lock.service';
+import { LogoutService as LogoutServiceAbstraction } from '../abstractions/logout.service';
 import { MessagingService } from '../abstractions/messaging.service';
 import { PlatformUtilsService } from '../abstractions/platformUtils.service';
 import { SearchService } from '../abstractions/search.service';
@@ -13,7 +13,7 @@ import { UserService } from '../abstractions/user.service';
 
 import { CipherString } from '../models/domain/cipherString';
 
-export class LockService implements LockServiceAbstraction {
+export class LogoutService implements LogoutServiceAbstraction {
     pinProtectedKey: CipherString = null;
 
     private inited = false;
@@ -22,7 +22,7 @@ export class LockService implements LockServiceAbstraction {
         private collectionService: CollectionService, private cryptoService: CryptoService,
         private platformUtilsService: PlatformUtilsService, private storageService: StorageService,
         private messagingService: MessagingService, private searchService: SearchService,
-        private userService: UserService, private lockedCallback: () => Promise<void> = null) {
+        private userService: UserService, private lockedCallback: () => Promise<void> = null, private logoutCallback: () => Promise<void> = null) {
     }
 
     init(checkOnInterval: boolean) {
@@ -57,11 +57,11 @@ export class LockService implements LockServiceAbstraction {
             return;
         }
 
-        let lockOption = this.platformUtilsService.lockTimeout();
-        if (lockOption == null) {
-            lockOption = await this.storageService.get<number>(ConstantsService.lockOptionKey);
+        let logoutOption = this.platformUtilsService.lockTimeout();
+        if (logoutOption == null) {
+            logoutOption = await this.storageService.get<number>(ConstantsService.logoutOptionKey);
         }
-        if (lockOption == null || lockOption < 0) {
+        if (logoutOption == null || logoutOption < 0) {
             return;
         }
 
@@ -70,46 +70,25 @@ export class LockService implements LockServiceAbstraction {
             return;
         }
 
-        const lockOptionSeconds = lockOption * 60;
+        const logoutOptionSeconds = logoutOption * 60;
         const diffSeconds = ((new Date()).getTime() - lastActive) / 1000;
-        if (diffSeconds >= lockOptionSeconds) {
+        if (diffSeconds >= logoutOptionSeconds) {
             // need to lock now
-            await this.lock(true);
+            await this.logout();
         }
     }
 
-    async lock(allowSoftLock = false): Promise<void> {
+    async logout(): Promise<void> {
         const authed = await this.userService.isAuthenticated();
         if (!authed) {
             return;
         }
-
-        await Promise.all([
-            this.cryptoService.clearKey(),
-            this.cryptoService.clearOrgKeys(true),
-            this.cryptoService.clearKeyPair(true),
-            this.cryptoService.clearEncKey(true),
-        ]);
-
-        this.folderService.clearCache();
-        this.cipherService.clearCache();
-        this.collectionService.clearCache();
-        this.searchService.clearIndex();
-        this.messagingService.send('locked');
-        if (this.lockedCallback != null) {
-            await this.lockedCallback();
-        }
+        await this.logoutCallback();
     }
 
-    async setLockOption(lockOption: number): Promise<void> {
-        await this.storageService.save(ConstantsService.lockOptionKey, lockOption);
+    async setLogoutOption(logoutOption: number): Promise<void> {
+        await this.storageService.save(ConstantsService.logoutOptionKey, logoutOption);
         await this.cryptoService.toggleKey();
-    }
-
-    async isPinLockSet(): Promise<[boolean, boolean]> {
-        const protectedPin = await this.storageService.get<string>(ConstantsService.protectedPin);
-        const pinProtectedKey = await this.storageService.get<string>(ConstantsService.pinProtectedKey);
-        return [protectedPin != null, pinProtectedKey != null];
     }
 
     clear(): Promise<any> {

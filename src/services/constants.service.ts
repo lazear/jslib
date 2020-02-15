@@ -8,7 +8,7 @@ export class ConstantsService {
     static readonly disableAutoTotpCopyKey: string = 'disableAutoTotpCopy';
     static readonly enableAutoFillOnPageLoadKey: string = 'enableAutoFillOnPageLoad';
     static readonly lockOptionKey: string = 'lockOption';
-    static readonly lockOptionLogout: string = 'lockOptionLogout'
+    static readonly logoutOptionKey: string = 'logoutOption'
     static readonly lastActiveKey: string = 'lastActive';
     static readonly neverDomainsKey: string = 'neverDomains';
     static readonly installedVersionKey: string = 'installedVersion';
@@ -32,7 +32,7 @@ export class ConstantsService {
     readonly disableAutoTotpCopyKey: string = ConstantsService.disableAutoTotpCopyKey;
     readonly enableAutoFillOnPageLoadKey: string = ConstantsService.enableAutoFillOnPageLoadKey;
     readonly lockOptionKey: string = ConstantsService.lockOptionKey;
-    readonly lockOptionLogout: string = ConstantsService.lockOptionLogout;
+    readonly logoutOptionKey: string = ConstantsService.logoutOptionKey;
     readonly lastActiveKey: string = ConstantsService.lastActiveKey;
     readonly neverDomainsKey: string = ConstantsService.neverDomainsKey;
     readonly installedVersionKey: string = ConstantsService.installedVersionKey;

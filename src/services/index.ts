@@ -11,6 +11,7 @@ export { EnvironmentService } from './environment.service';
 export { FolderService } from './folder.service';
 export { I18nService } from './i18n.service';
 export { LockService } from './lock.service';
+export { LogoutService } from './logout.service';
 export { PasswordGenerationService } from './passwordGeneration.service';
 export { SettingsService } from './settings.service';
 export { StateService } from './state.service';
